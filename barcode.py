@@ -1,5 +1,7 @@
 import requests
 from validator import validate_nutrition
+from halal_checker import check_halal
+
 
 def lookup_barcode(barcode):
     """
@@ -49,9 +51,15 @@ def lookup_barcode(barcode):
                 "message": "Product found but nutrition data is incomplete."
             }
 
+        # Run halal check using ingredients from Open Food Facts
+        ingredients_text = product.get("ingredients_text", "")
+        ingredients_tags = product.get("ingredients_tags", [])
+        halal_result = check_halal(ingredients_text, ingredients_tags)
+
         cleaned["found"] = True
         cleaned["barcode"] = barcode
         cleaned["valid"] = True
+        cleaned["halal"] = halal_result
         return cleaned
 
     except requests.exceptions.Timeout:
