@@ -56,7 +56,8 @@ def get_daily_summary(user_id, target_date=None):
     # Get all entries for today
     cursor.execute("""
         SELECT foods.name, entries.quantity_g, entries.meal_type,
-               foods.calories, foods.protein_g, foods.carbs_g, foods.fat_g
+               foods.calories, foods.protein_g, foods.carbs_g, foods.fat_g,
+               entries.id
         FROM entries
         JOIN foods ON entries.food_id = foods.id
         WHERE entries.user_id = ? AND entries.date = ?
@@ -71,7 +72,7 @@ def get_daily_summary(user_id, target_date=None):
     totals = {"calories": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0}
 
     for row in rows:
-        name, qty, meal_type, cal, prot, carb, fat = row
+        name, qty, meal_type, cal, prot, carb, fat, entry_id = row
         ratio = qty / 100
         entry = {
             "food": name,
@@ -80,6 +81,7 @@ def get_daily_summary(user_id, target_date=None):
             "protein_g": round(prot * ratio, 1),
             "carbs_g": round(carb * ratio, 1),
             "fat_g": round(fat * ratio, 1),
+            "entry_id": entry_id,
         }
         if meal_type in meals:
             meals[meal_type].append(entry)
@@ -160,3 +162,18 @@ def get_favourites(user_id):
 
     conn.close()
     return results
+
+
+def delete_entry(entry_id, user_id):
+    """
+    Deletes a logged food entry.
+    user_id check prevents deleting other users' entries.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM entries WHERE id = ? AND user_id = ?",
+        (entry_id, user_id)
+    )
+    conn.commit()
+    conn.close()

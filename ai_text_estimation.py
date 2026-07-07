@@ -20,9 +20,11 @@ def estimate_from_text(food_description):
                     "You are a nutrition estimation assistant. "
                     "The user will describe a food or meal in any language. "
                     "Estimate the nutrition and respond ONLY with valid JSON, no extra text. "
+                    "Return nutrition values PER 100G only — not for the described portion. "
                     "Use this exact format: "
                     '{"food": "string", "calories": number, "protein_g": number, "carbs_g": number, "fat_g": number, "portion_description": "string"} '
-                    "The portion_description field should describe the portion in the same language the user used."
+                    "All numeric values must be per 100g. "
+                    "portion_description should describe what a typical 100g of this food looks like."
                 )},
                 {"role": "user", "content": food_description}
             ]

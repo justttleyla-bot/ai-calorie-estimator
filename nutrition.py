@@ -18,7 +18,9 @@ def get_nutrition_per_100g(food_name):
             messages=[
                 {"role": "system", "content": (
                     "You are a nutrition database assistant. "
-                    "Given a food name in any language, return ONLY valid JSON with nutrition per 100g. "
+                    "Given a food name in any language, return ONLY valid JSON "
+                    "with nutrition values PER 100G only — not for any described portion. "
+                    "Return ALL values per 100g. "
                     "Use this exact format: "
                     '{"calories": number, "protein_g": number, "carbs_g": number, "fat_g": number} '
                     "No explanations, no extra text, just the JSON."
@@ -27,6 +29,11 @@ def get_nutrition_per_100g(food_name):
             ]
         )
         raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
         return json.loads(raw)
     except Exception as e:
         return {"error": str(e)}
