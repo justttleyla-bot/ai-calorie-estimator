@@ -177,3 +177,54 @@ def delete_entry(entry_id, user_id):
     )
     conn.commit()
     conn.close()
+
+
+def get_history(user_id, days=30):
+    """
+    Returns meal entries grouped by date for the past N days.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT entries.date,
+               foods.name, entries.quantity_g, entries.meal_type,
+               foods.calories, foods.protein_g, foods.carbs_g, foods.fat_g,
+               entries.id
+        FROM entries
+        JOIN foods ON entries.food_id = foods.id
+        WHERE entries.user_id = ?
+        ORDER BY entries.date DESC, entries.meal_type
+        LIMIT 500
+    """, (user_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    history = {}
+    for row in rows:
+        date_str, name, qty, meal_type, cal, prot, carb, fat, entry_id = row
+        ratio = qty / 100
+        if date_str not in history:
+            history[date_str] = {
+                "date": date_str,
+                "totals": {"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0},
+                "entries": []
+            }
+        entry = {
+            "food": name, "quantity_g": qty, "meal_type": meal_type,
+            "calories": round(cal*ratio,1), "protein_g": round(prot*ratio,1),
+            "carbs_g": round(carb*ratio,1), "fat_g": round(fat*ratio,1),
+            "entry_id": entry_id
+        }
+        history[date_str]["entries"].append(entry)
+        history[date_str]["totals"]["calories"] += entry["calories"]
+        history[date_str]["totals"]["protein_g"] += entry["protein_g"]
+        history[date_str]["totals"]["carbs_g"] += entry["carbs_g"]
+        history[date_str]["totals"]["fat_g"] += entry["fat_g"]
+
+    for d in history:
+        for k in history[d]["totals"]:
+            history[d]["totals"][k] = round(history[d]["totals"][k], 1)
+
+    return dict(sorted(history.items(), reverse=True))
