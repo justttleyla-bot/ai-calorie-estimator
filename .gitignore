@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 test_food.jpg
 log.txt
+.streamlit/secrets.toml

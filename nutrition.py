@@ -4,7 +4,14 @@ from dotenv import load_dotenv
 from mistralai.client import Mistral
 
 load_dotenv()
-client = Mistral(api_key=os.environ["MISTRAL_API_KEY"])
+try:
+    import streamlit as st
+    api_key = st.secrets.get("MISTRAL_API_KEY")
+except Exception:
+    api_key = None
+if not api_key:
+    api_key = os.environ.get("MISTRAL_API_KEY")
+client = Mistral(api_key=api_key)
 
 def get_nutrition_per_100g(food_name):
     """

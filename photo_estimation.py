@@ -6,7 +6,15 @@ from mistralai.client import Mistral
 from validator import validate_nutrition
 
 load_dotenv()
-client = Mistral(api_key=os.environ["MISTRAL_API_KEY"])
+try:
+    import streamlit as st
+    api_key = st.secrets.get("MISTRAL_API_KEY")
+except Exception:
+    api_key = None
+if not api_key:
+    api_key = os.environ.get("MISTRAL_API_KEY")
+client = Mistral(api_key=api_key)
+
 
 def encode_image(image_path):
     """
